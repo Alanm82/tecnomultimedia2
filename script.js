@@ -12,7 +12,7 @@ let focusX, focusY;
 //Mic
 let mic;
 let amp;
-let imprimir = false;
+let imprimir = true;
 let antesHabiaSonido = false;
 let audioContext;
 let pitch;
@@ -26,7 +26,7 @@ let tiempoLimite = 5000;
 //MicConfig
 let ampMin = 0.002;
 let ampMax = 0.3;
-let frecMin = 300;
+let frecMin = 600;
 let frecMax = 1000;
 let haySonido = false;
 let gestorAmp;
@@ -163,7 +163,7 @@ function actualizarMic() {
     haySonido = amp > 0.01;
     let empezoSonido = haySonido && !antesHabiaSonido;
     let finSonido = !haySonido && antesHabiaSonido;
-    aplauso(empezoSonido, finSonido);
+    gestosSonoros(empezoSonido, finSonido);
     if (imprimir) {
         printData();
     }
@@ -231,11 +231,12 @@ function drawGrid() {
     }
 }
 
-function aplauso(empezo, termino) {
+function gestosSonoros(empezo, termino) {
 
     if (empezo) {
         tiempoInicioSonido = millis();
         ampMaximo = amp;
+        pitchMaximo = gestorPitch.filtrada;
         console.log(tiempoInicioSonido);
     }
 
@@ -243,12 +244,23 @@ function aplauso(empezo, termino) {
         if (amp > ampMaximo) {
             ampMaximo = amp; // Actualizar el valor máximo si la amplitud actual es mayor
         }
+        if(gestorPitch.filtrada>0.3){
+            fill(0);
+            text("Frecuencia constante de"+gestorPitch.filtrada,50,200);
+            for(let i=0; i<previousPos.length; i++){
+                previousPos[i].enlarged=false; 
+            }
+            
+        }
+        if (gestorPitch.filtrada > pitchMaximo) {
+            pitchMaximo = gestorPitch.filtrada; // Actualizar el valor máximo si la amplitud actual es mayor
+        }
     }
 
     if (termino) {
         let duracionSonido = millis() - tiempoInicioSonido;
 
-        if (duracionSonido < 500 && ampMaximo > 0.2) { // Duración máxima y amplitud mínima para considerar un aplauso
+        if (duracionSonido < 500 && ampMaximo > 0.2 && pitchMaximo<0.05 ) { // Duración máxima y amplitud mínima para considerar un aplauso
             console.log("Aplauso detectado con amplitud máxima de: " + ampMaximo);
 
             let posX = round(random(0, 15));
@@ -266,6 +278,32 @@ function aplauso(empezo, termino) {
         }
     }
 }
+
+
+function silbido(empezo, termino) {
+
+    if (empezo) {
+        tiempoInicioSonido = millis();
+        pitchMaximo = gestorPitch.filtrada;
+        console.log(tiempoInicioSonido);
+    }
+
+    if (haySonido) {
+        if (gestorPitch.filtrada > pitchMaximo) {
+            pitchMaximo = gestorPitch.filtrada; // Actualizar el valor máximo si la amplitud actual es mayor
+        }
+    }
+
+    if (termino) {
+        let duracionSonido = millis() - tiempoInicioSonido;
+
+        if (duracionSonido < 500 && pitchMaximo > 0.8) { // Duración máxima y amplitud mínima para considerar un aplauso
+            console.log("silbido detectado con frecuencia máxima de: " + pitchMaximo);
+
+        }
+    }
+}
+
 function drawSquare(x, y, enlarged = false) {
     var x0 = grid[x][y][0];
     var y0 = grid[x][y][1];
@@ -346,5 +384,4 @@ function redrawGrid() {
 function draw() {
     redrawGrid();
     actualizarMic();
-    aplauso();
 }
