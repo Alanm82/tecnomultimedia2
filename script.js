@@ -26,8 +26,8 @@ let tiempoLimite = 5000;
 //MicConfig
 let ampMin = 0.002;
 let ampMax = 0.3;
-let frecMin = 600;
-let frecMax = 1000;
+let frecMin = 450;
+let frecMax = 1200;
 let haySonido = false;
 let gestorAmp;
 const modelUrl = 'https://cdn.jsdelivr.net/gh/ml5js/ml5-data-and-models/models/pitch-detection/crepe/';
@@ -244,7 +244,9 @@ function gestosSonoros(empezo, termino) {
         if (amp > ampMaximo) {
             ampMaximo = amp; // Actualizar el valor máximo si la amplitud actual es mayor
         }
-        if(gestorPitch.filtrada>0.3){
+
+        /* Frecuencia iniciada */
+        if(gestorPitch.filtrada>0.4){
             fill(0);
             text("Frecuencia constante de"+gestorPitch.filtrada,50,200);
             for(let i=0; i<previousPos.length; i++){
@@ -280,29 +282,6 @@ function gestosSonoros(empezo, termino) {
 }
 
 
-function silbido(empezo, termino) {
-
-    if (empezo) {
-        tiempoInicioSonido = millis();
-        pitchMaximo = gestorPitch.filtrada;
-        console.log(tiempoInicioSonido);
-    }
-
-    if (haySonido) {
-        if (gestorPitch.filtrada > pitchMaximo) {
-            pitchMaximo = gestorPitch.filtrada; // Actualizar el valor máximo si la amplitud actual es mayor
-        }
-    }
-
-    if (termino) {
-        let duracionSonido = millis() - tiempoInicioSonido;
-
-        if (duracionSonido < 500 && pitchMaximo > 0.8) { // Duración máxima y amplitud mínima para considerar un aplauso
-            console.log("silbido detectado con frecuencia máxima de: " + pitchMaximo);
-
-        }
-    }
-}
 
 function drawSquare(x, y, enlarged = false) {
     var x0 = grid[x][y][0];
