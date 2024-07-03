@@ -26,11 +26,15 @@ let tiempoLimite = 5000;
 //MicConfig
 let ampMin = 0.002;
 let ampMax = 0.3;
-let frecMin = 450;
+let frecMin = 600;
 let frecMax = 1200;
-let haySonido = false;
 let gestorAmp;
 const modelUrl = 'https://cdn.jsdelivr.net/gh/ml5js/ml5-data-and-models/models/pitch-detection/crepe/';
+
+//SonidoParametros
+let haySonido = false;
+let empezoSilencio;
+let tiempoSilencio = 0;
 
 function setup() {
     // Determinar la cantidad de filas y columnas adicionales
@@ -163,12 +167,17 @@ function actualizarMic() {
     haySonido = amp > 0.01;
     let empezoSonido = haySonido && !antesHabiaSonido;
     let finSonido = !haySonido && antesHabiaSonido;
+    if(finSonido ==true){
+         empezoSilencio = !haySonido;
+    } else if(empezoSonido == true){
+        empezoSilencio = !haySonido;
+    }
     gestosSonoros(empezoSonido, finSonido);
     if (imprimir) {
         printData();
     }
-
     antesHabiaSonido = haySonido;
+    silencioReiniciar(empezoSilencio);
 }
 
 
@@ -231,6 +240,19 @@ function drawGrid() {
     }
 }
 
+function silencioReiniciar(iniciaSilencio) {
+    if (iniciaSilencio) {
+        if (tiempoSilencio === 0) {
+            tiempoSilencio = millis();
+            console.log("IniciaSilencio " + tiempoSilencio);
+        } else if (millis() - tiempoSilencio > 5000) {
+            console.log("El silencio superó los 5 segundos");
+        }
+    } else {
+        tiempoSilencio = 0;
+    }
+}
+
 function gestosSonoros(empezo, termino) {
 
     if (empezo) {
@@ -246,13 +268,13 @@ function gestosSonoros(empezo, termino) {
         }
 
         /* Frecuencia iniciada */
-        if(gestorPitch.filtrada>0.4){
+        if (gestorPitch.filtrada > 0.4) {
             fill(0);
-            text("Frecuencia constante de"+gestorPitch.filtrada,50,200);
-            for(let i=0; i<previousPos.length; i++){
-                previousPos[i].enlarged=false; 
+            text("Frecuencia constante de" + gestorPitch.filtrada, 50, 200);
+            for (let i = 0; i < previousPos.length; i++) {
+                previousPos[i].enlarged = false;
             }
-            
+
         }
         if (gestorPitch.filtrada > pitchMaximo) {
             pitchMaximo = gestorPitch.filtrada; // Actualizar el valor máximo si la amplitud actual es mayor
@@ -262,12 +284,12 @@ function gestosSonoros(empezo, termino) {
     if (termino) {
         let duracionSonido = millis() - tiempoInicioSonido;
 
-        if (duracionSonido < 500 && ampMaximo > 0.2 && pitchMaximo<0.05 ) { // Duración máxima y amplitud mínima para considerar un aplauso
+        if (duracionSonido < 500 && ampMaximo > 0.2 && pitchMaximo < 0.05) { // Duración máxima y amplitud mínima para considerar un aplauso
             console.log("Aplauso detectado con amplitud máxima de: " + ampMaximo);
 
             let posX = round(random(0, 15));
             let posY = round(random(0, 15));
-        
+
             if (posX > 0 && posX < gridDivsX - 1 && posY > 0 && posY < gridDivsY - 1) {
                 // Verificar si la nueva posición es diferente de la posición anterior
                 if (posX != previousPos[0] || posY != previousPos[1]) {
@@ -308,17 +330,23 @@ function drawSquare(x, y, enlarged = false) {
         brightnessFactor = 0.5;
     }
 
-
     col = lerpColor(color(0), col, brightnessFactor);
     fill(col);
     noStroke();
 
     if (enlarged) {
+        var xn2 = grid[x + 2][y][0];  // Vértice derecho del vecino derecho
+        var yn2 = grid[x + 2][y][1];
+        var xm2 = grid[x][y + 2][0];  // Vértice inferior del vecino inferior
+        var ym2 = grid[x][y + 2][1];
+        var xp2 = grid[x + 2][y + 2][0];  // Vértice derecho inferior del vecino derecho inferior
+        var yp2 = grid[x + 2][y + 2][1];
+
         beginShape();
         vertex(x0, y0);
-        vertex(xn + gridSpacingX, yn);
-        vertex(xp + gridSpacingX, yp + gridSpacingY);
-        vertex(xm, ym + gridSpacingY);
+        vertex(xn2, yn2);
+        vertex(xp2, yp2);
+        vertex(xm2, ym2);
         endShape(CLOSE);
     } else {
         beginShape();
@@ -329,6 +357,7 @@ function drawSquare(x, y, enlarged = false) {
         endShape(CLOSE);
     }
 }
+
 
 function mousePressed() {
     let clickedX = floor((mouseX - pad) / gridSpacingX);
