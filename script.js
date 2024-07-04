@@ -12,7 +12,7 @@ let focusX, focusY;
 //Mic
 let mic;
 let amp;
-let imprimir = true;
+let imprimir = false;
 let antesHabiaSonido = false;
 let audioContext;
 let pitch;
@@ -170,7 +170,7 @@ function actualizarMic() {
     gestorAmp.actualizar(mic.getLevel());
     amp = gestorAmp.filtrada;
     fill(255);
-    text("Frecuencia constante de " + gestorPitch.filtrada, 50, 200);
+    //text("Frecuencia constante de " + gestorPitch.filtrada, 50, 200);
     haySonido = amp > 0.01;
     if(!haySonido){
         //gestorPitch.filtrada=0;
@@ -364,6 +364,7 @@ function drawSquare(x, y, enlarged = false, s = 0) {
         var xp2 = grid[x + 2][y + 2][0];  // Vértice derecho inferior del vecino derecho inferior
         var yp2 = grid[x + 2][y + 2][1];
 
+        console.log(col + "Color cambiadno?");
         beginShape();
         vertex(x0, y0);
         vertex(xn2, yn2);
@@ -402,7 +403,7 @@ function enlargeSquare(i, j) {
             return; // No permitir superposición de cuadrados agrandados
         }
     }
-    
+
     enlargedSquares.push([i, j]);
     redrawGrid();
 }
