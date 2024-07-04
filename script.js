@@ -26,8 +26,8 @@ let tiempoLimite = 5000;
 //MicConfig
 let ampMin = 0.002;
 let ampMax = 0.3;
-let frecMin = 500;
-let frecMax = 1200;
+let frecMin = 300;
+let frecMax = 1000;
 let silbido = 0;
 let gestorAmp;
 const modelUrl = 'https://cdn.jsdelivr.net/gh/ml5js/ml5-data-and-models/models/pitch-detection/crepe/';
@@ -121,7 +121,6 @@ function setup() {
         ]
     ];
 
-
     colors = random(palettes);
 
     // Determinar el modo de brillo
@@ -151,7 +150,12 @@ function setup() {
     iniciarMic();
     drawGrid();
 }
+    
 
+
+function luminosity(c) {
+    return 0.2126 * red(c) + 0.7152 * green(c) + 0.0722 * blue(c);
+}
 
 function iniciarMic() {
     userStartAudio();
@@ -169,7 +173,7 @@ function actualizarMic() {
     text("Frecuencia constante de " + gestorPitch.filtrada, 50, 200);
     haySonido = amp > 0.01;
     if(!haySonido){
-        gestorPitch.filtrada=0;
+        //gestorPitch.filtrada=0;
     }
     let empezoSonido = haySonido && !antesHabiaSonido;
     let finSonido = !haySonido && antesHabiaSonido;
@@ -252,7 +256,7 @@ function silencioReiniciar(iniciaSilencio) {
         if (tiempoSilencio === 0) {
             tiempoSilencio = millis();
             console.log("IniciaSilencio " + tiempoSilencio);
-        } else if (millis() - tiempoSilencio > 20000) {
+        } else if (millis() - tiempoSilencio > 5000) {
             console.log("El silencio superó los 5 segundos");
             redrawGrid();
         }
@@ -278,12 +282,12 @@ function gestosSonoros(empezo, termino) {
         }
 
         /* Frecuencia iniciada */
-        if (gestorPitch.filtrada > 0.2) {
+        if (gestorPitch.filtrada > 0.4) {
             fill(0);
             //text("Frecuencia constante de " + gestorPitch.filtrada, 50, 200);
 
             // Calcular silbido proporcional a la frecuencia filtrada
-            silbido = round(map(gestorPitch.filtrada, 0.3, 1.0, 0, 13));
+            silbido = round(map(gestorPitch.filtrada, 0.4, 1.0, 0, 13));
             console.log("silbido es " + silbido);
         }
     }
@@ -398,7 +402,7 @@ function enlargeSquare(i, j) {
             return; // No permitir superposición de cuadrados agrandados
         }
     }
-
+    
     enlargedSquares.push([i, j]);
     redrawGrid();
 }
